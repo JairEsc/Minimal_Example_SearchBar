@@ -59,11 +59,33 @@ app = dash.Dash(__name__)
 
 app.layout = html.Div([
     html.H1("Dash App with GeoJSON Polygons"),
+    dcc.Dropdown(
+        id="polygon-dropdown",
+        options=[
+            {"label": "Polygon 1", "value": "Polygon 1"},
+            {"label": "Polygon 2", "value": "Polygon 2"}
+        ],
+        placeholder="Select a polygon"
+    ),
     dl.Map(center=[41.0, -101.0], zoom=5, children=[
         dl.TileLayer(),
         dl.GeoJSON(data=geojson_data, id="geojson")
     ], style={'width': '100%', 'height': '500px'}, id="map")
 ])
+
+@app.callback(
+    Output("geojson", "clickData"),
+    Input("polygon-dropdown", "value"),
+    prevent_initial_call=True
+)
+def update_click_data_from_dropdown(selected_polygon):
+    if not selected_polygon:
+        return dash.no_update
+    # Find the feature corresponding to the selected polygon
+    for feature in geojson_data["features"]:
+        if feature["properties"]["name"] == selected_polygon:
+            return {"geometry": feature["geometry"]}
+    return dash.no_update
 
 @app.callback(
     Output("map", "viewport"),
